@@ -1,12 +1,9 @@
 --=========================================================================
---The Funnel Steps
-
---How many users reached each page?
---What is the conversion rate between each step?
-
---Home → Search
---Search → Payment
---Payment → Confirmation
+-- Step 3: Funnel Building
+-- Goal: Map the full user journey and calculate conversion rates
+--       between each step of the funnel
+--=========================================================================
+-- Conversion Rate = Current Step Users / Previous Step Users * 100
 --=========================================================================
 
 WITH union_all AS  (
@@ -29,15 +26,17 @@ END AS conversion_rate
 FROM union_all
 GROUP BY page, step_order
 
---=============================================================
---The results 
---  Step         Users   Conversion Rate
----------------------------------------------
---  Home        90,400        100%
---  Search      45,200         50%
---  Payment      6,030         13%
--- Confirmation    452        7.5%
--- ==============================================================
--- Key Insight: The biggest drop-off happens between Search and Payment
--- 45,200 users searched but only 6,030 reached payment — 87% dropped off
--- This is where the CEO should focus attention
+--=========================================================================
+-- Results
+--=========================================================================
+--  Step              Users    Conversion Rate
+-- --------------------------------------------
+--  Home             90,400        100%
+--  Search           45,200         50%
+--  Payment           6,030         13%
+--  Confirmation        452         7.5%
+---------------------------
+-- Key Insight:
+-- Overall conversion rate from Home to Confirmation is just 0.5%
+-- Only 452 out of 90,400 users completed a purchase
+--=========================================================================
