@@ -51,6 +51,5 @@ MIN(date) firstdate,
 MAX(date) lastdate,
 DATEDIFF(DAY,MIN(date),MAX(date)) 
 FROM user_table;
--- Date range 119 Day
--- first date = 2015-01-01 last date = 2015-04-30 
+-- Date Range: 2015-01-01 to 2015-04-30 (119 days)
 --==================================================
