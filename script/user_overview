@@ -1,0 +1,51 @@
+--===============================================================================
+--User Distribution
+
+--Total users by sex
+--Total users by device
+--Total users by date — how many new users per day
+--===============================================================================
+
+--Who are the users? 
+-- Distribution by sex
+
+
+SELECT 
+u.sex,
+COUNT(u.user_id) total_user
+FROM user_table u
+LEFT JOIN home_page_table h
+ON u.user_id = h.user_id
+LEFT JOIN search_page_table s
+ON u.user_id = s.user_id
+GROUP BY u.sex;
+-- Total Male User = 45325
+-- Total Female User = 45075
+
+--=================================================
+-- Distribution by device
+SELECT 
+u.device,
+COUNT(u.user_id) total_user
+FROM user_table u
+LEFT JOIN home_page_table h
+ON u.user_id = h.user_id
+LEFT JOIN search_page_table s
+ON u.user_id = s.user_id
+GROUP BY u.device;
+-- Total Desktop User = 60200
+-- Total Mobile User = 30200
+--==================================================
+-- Distribution by date (month)
+SELECT 
+FORMAT(date, 'MMMM') AS month,
+COUNT(user_id) AS total_users
+FROM user_table
+GROUP BY FORMAT(date, 'MMMM')
+ORDER BY total_users DESC;
+-- Total user for February = 22600
+-- Total user for April = 22600
+-- Total user for January = 22600
+-- Total user for March = 22600
+-- Users are perfectly evenly distributed across all 4 months
+-- confirming the dataset is synthetically generated
