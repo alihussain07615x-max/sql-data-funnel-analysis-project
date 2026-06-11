@@ -1,10 +1,7 @@
---===============================================================================
---User Distribution
-
---Total users by sex
---Total users by device
---Total users by date — how many new users per day
---===============================================================================
+--=========================================================================
+-- Step 2: User Overview
+-- Goal: Understand who the users are and how they are distributed
+--=========================================================================
 
 --Who are the users? 
 -- Distribution by sex
