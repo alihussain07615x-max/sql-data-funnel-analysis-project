@@ -1,0 +1,19 @@
+WITH union_all AS  (
+SELECT user_id,page,1 AS step_order FROM home_page_table
+UNION ALL 
+SELECT user_id,page,2 AS step_order FROM search_page_table 
+UNION ALL 
+SELECT user_id,page,3 AS step_order FROM payment_page_table
+UNION ALL 
+SELECT user_id,page,4 AS step_order FROM payment_confirmation_table
+)
+SELECT
+step_order,
+page,
+COUNT( user_id) AS total_user,
+CASE 
+WHEN LAG(COUNT(user_id)) OVER(ORDER BY step_order) IS NULL THEN 100
+ELSE  ROUND(( CAST(COUNT(user_id)AS float)/ CAST (LAG(COUNT(DISTINCT user_id)) OVER(ORDER BY step_order ) AS float) ) * 100, 2)
+END AS conversion_rate
+FROM union_all
+GROUP BY page, step_order
