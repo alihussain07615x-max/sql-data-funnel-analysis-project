@@ -1,6 +1,10 @@
---Database Exploration
---Understand the tables, row counts, and how they connect
--- CHECK FOR NULLS
+--=========================================================================
+-- Step 1: Database Exploration
+-- Goal: Understand the structure, volume, and quality of the data
+--=========================================================================
+-- Checked for nulls across all tables — no nulls found
+-- Verified referential integrity between user_table and page tables
+--=========================================================================
 
 SELECT COUNT(*) FROM user_table WHERE user_id IS NULL;
 SELECT COUNT(*) FROM home_page_table WHERE user_id IS NULL;
