@@ -1,3 +1,14 @@
+--=========================================================================
+--The Funnel Steps
+
+--How many users reached each page?
+--What is the conversion rate between each step?
+
+--Home → Search
+--Search → Payment
+--Payment → Confirmation
+--=========================================================================
+
 WITH union_all AS  (
 SELECT user_id,page,1 AS step_order FROM home_page_table
 UNION ALL 
@@ -13,7 +24,20 @@ page,
 COUNT( user_id) AS total_user,
 CASE 
 WHEN LAG(COUNT(user_id)) OVER(ORDER BY step_order) IS NULL THEN 100
-ELSE  ROUND(( CAST(COUNT(user_id)AS float)/ CAST (LAG(COUNT(DISTINCT user_id)) OVER(ORDER BY step_order ) AS float) ) * 100, 2)
+ELSE  ROUND(( CAST(COUNT(user_id)AS float)/ CAST (LAG(COUNT(user_id)) OVER(ORDER BY step_order ) AS float) ) * 100, 2)
 END AS conversion_rate
 FROM union_all
 GROUP BY page, step_order
+
+--=============================================================
+--The results 
+--  Step         Users   Conversion Rate
+---------------------------------------------
+--  Home        90,400        100%
+--  Search      45,200         50%
+--  Payment      6,030         13%
+-- Confirmation    452        7.5%
+-- ==============================================================
+-- Key Insight: The biggest drop-off happens between Search and Payment
+-- 45,200 users searched but only 6,030 reached payment — 87% dropped off
+-- This is where the CEO should focus attention
