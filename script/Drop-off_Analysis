@@ -1,0 +1,53 @@
+--=========================================================================
+-- Step 4: Drop-off Analysis
+-- Goal: Identify where users are leaving the funnel and quantify the loss
+--=========================================================================
+-- Drop-off = Previous Step Users - Current Step Users
+-- Drop-off Rate = Drop-off / Previous Step Users * 100
+--=========================================================================
+
+WITH union_all AS (
+SELECT user_id, page, 1 AS step_order FROM home_page_table
+UNION ALL
+SELECT user_id, page, 2 AS step_order FROM search_page_table
+UNION ALL
+SELECT user_id, page, 3 AS step_order FROM payment_page_table
+UNION ALL
+SELECT user_id, page, 4 AS step_order FROM payment_confirmation_table
+)
+SELECT
+page,
+total_user,
+drop_off,
+ROUND(CAST(drop_off AS float) / CAST(previous_step_users AS float) * 100, 2) AS drop_off_rate
+FROM (
+    SELECT
+    step_order,
+    page,
+    COUNT(user_id) AS total_user,
+    LAG(COUNT(user_id)) OVER(ORDER BY step_order) AS previous_step_users,
+    CASE WHEN LAG(COUNT(user_id)) OVER(ORDER BY step_order) IS NULL THEN 0
+    ELSE LAG(COUNT(user_id)) OVER(ORDER BY step_order) - COUNT(user_id)
+    END AS drop_off
+    FROM union_all
+    GROUP BY page, step_order
+)T
+
+--=========================================================================
+-- Results
+--=========================================================================
+--  Step                  Users    Dropped    Drop-off Rate
+-- --------------------------------------------------------
+--  Home → Search        90,400    45,200        50%
+--  Search → Payment     45,200    39,170        86%
+--  Payment → Confirm     6,030     5,578        92%
+--=========================================================================
+-- Key Insights:
+-- 1. Half of all users never make it past the home page
+-- 2. The Search → Payment step is the biggest problem
+--    86% of users who searched never reached payment
+-- 3. Only 452 out of 90,400 users completed a purchase
+--    That is an overall conversion rate of just 0.5%
+-- 4. The CEO's concern is valid — the funnel has a critical
+--    drop-off point at the payment step that needs investigation
+--=========================================================================
