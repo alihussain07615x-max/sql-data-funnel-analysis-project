@@ -1,0 +1,52 @@
+--Database Exploration
+--Understand the tables, row counts, and how they connect
+-- CHECK FOR NULLS
+
+SELECT COUNT(*) FROM user_table WHERE user_id IS NULL;
+SELECT COUNT(*) FROM home_page_table WHERE user_id IS NULL;
+-- No nulls been found 
+--==================================================
+
+SELECT 
+u.user_id,
+u.date,
+u.device,
+u.sex,
+h.page,
+s.page
+FROM user_table u
+LEFT JOIN home_page_table h
+ON u.user_id = h.user_id
+LEFT JOIN search_page_table s
+ON u.user_id = s.user_id
+WHERE h.page IS NULL;
+-- No nulls been found 
+--===================================================
+
+--==================================================
+
+-- Row Counts Per Table
+
+SELECT COUNT(user_id) FROM user_table;
+-- Total rows = 90400
+SELECT COUNT(user_id) FROM home_page_table;
+-- Total rows = 90400
+SELECT COUNT(user_id) FROM search_page_table;
+-- Total rows = 45200
+SELECT COUNT(user_id) FROM payment_page_table;
+-- Total rows = 6030
+SELECT COUNT(user_id) FROM payment_confirmation_table;
+-- Total rows = 452
+--==================================================
+--==================================================
+
+-- Date range
+
+SELECT
+MIN(date) firstdate,
+MAX(date) lastdate,
+DATEDIFF(DAY,MIN(date),MAX(date)) 
+FROM user_table;
+-- Date range 119 Day
+-- first date = 2015-01-01 last date = 2015-04-30 
+--==================================================
