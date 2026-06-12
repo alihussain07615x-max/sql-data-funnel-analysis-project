@@ -1,0 +1,139 @@
+--=========================================================================
+-- Step 5: Segmentation Analysis
+-- Goal: Break down the funnel by user characteristics to identify
+--       which segments have the lowest conversion rates
+--=========================================================================
+-- Segments analyzed:
+-- 1. By Device  (Desktop vs Mobile)
+-- 2. By Sex     (Male vs Female)
+-- 3. New vs Returning 
+--=========================================================================
+WITH union_all AS  (
+SELECT user_id,page,1 AS step_order FROM home_page_table
+UNION ALL 
+SELECT user_id,page,2 AS step_order FROM search_page_table 
+UNION ALL 
+SELECT user_id,page,3 AS step_order FROM payment_page_table
+UNION ALL 
+SELECT user_id,page,4 AS step_order FROM payment_confirmation_table
+
+)
+SELECT
+page,
+device,
+total_user,
+conversion_rate,
+drop_off,
+COALESCE(ROUND(CAST(drop_off AS float) / CAST(previous_step_users AS float) * 100,2) ,0) AS drop_off_rate
+FROM
+(
+SELECT
+a.step_order,
+a.page,
+t.device,
+COUNT( a.user_id) AS total_user,
+LAG(COUNT(a.user_id)) OVER(PARTITION BY device ORDER BY device,step_order ) AS previous_step_users,
+CASE 
+WHEN LAG(COUNT(a.user_id)) OVER(PARTITION BY device ORDER BY device,step_order) IS NULL THEN 100
+ELSE  ROUND(( CAST(COUNT(a.user_id)AS float)/ CAST (LAG(COUNT(a.user_id)) OVER(PARTITION BY device ORDER BY device,step_order ) AS float) ) * 100, 2)
+END AS conversion_rate,
+CASE WHEN LAG(COUNT(a.user_id)) OVER(PARTITION BY device ORDER BY device,step_order) IS NULL THEN 0
+ELSE LAG(COUNT(a.user_id)) OVER(PARTITION BY device ORDER BY device,step_order) - COUNT(a.user_id) 
+END AS drop_off
+FROM union_all a
+LEFT JOIN user_table t
+ON a.user_id = t.user_id
+GROUP BY page,device, step_order)T;
+
+--=========================================================================
+-- Segmentation by Device
+--=========================================================================
+-- Results
+--=========================================================================
+--  Step          Desktop  Conv%  Drop-off  Drop-off%  Mobile  Conv%  Drop-off  Drop-off%
+-- ----------------------------------------------------------------------------------------
+--  Home          60200      100%      0          0     30200   100%      0          0
+--  Search        30100       50%     30100      50%    15100    50%      15100      50%
+--  Payment        3010       10%     27090      90%    3020     20%      12080      80%
+--  Confirmation    150      4.98%    2860       95.2%   302     10%      2718       90%
+---------------------------
+--=========================================================================
+-- key Insights:
+-- 1. Both desktop and mobile have the same 50% drop-off at Home → Search
+--    meaning the home page problem affects all devices equally
+-- 2. The biggest difference is at the Payment step:
+--    Desktop converts at only 10% vs Mobile at 20%
+--    Mobile users are TWICE as likely to reach payment than desktop users
+-- 3. Mobile also shows stronger final conversion — 10% vs 4.98%
+--    meaning mobile users who reach payment are more committed to buying
+-- 4. Overall mobile conversion is significantly better than desktop
+--    despite desktop having double the users
+--=========================================================================
+--=========================================================================
+
+WITH union_all AS  (
+SELECT user_id,page,1 AS step_order FROM home_page_table
+UNION ALL 
+SELECT user_id,page,2 AS step_order FROM search_page_table 
+UNION ALL 
+SELECT user_id,page,3 AS step_order FROM payment_page_table
+UNION ALL 
+SELECT user_id,page,4 AS step_order FROM payment_confirmation_table
+
+)
+SELECT
+page,
+sex,
+total_user,
+conversion_rate,
+drop_off,
+COALESCE(ROUND(CAST(drop_off AS float) / CAST(previous_step_users AS float) * 100,2) ,0) AS drop_off_rate 
+FROM
+(
+SELECT
+a.step_order,
+a.page,
+t.sex,
+COUNT( a.user_id) AS total_user,
+LAG(COUNT(a.user_id)) OVER(PARTITION BY sex ORDER BY sex,step_order ) AS previous_step_users ,
+CASE 
+WHEN LAG(COUNT(a.user_id)) OVER(PARTITION BY sex ORDER BY sex,step_order) IS NULL THEN 100
+ELSE  ROUND(( CAST(COUNT(a.user_id)AS float)/ CAST (LAG(COUNT(a.user_id)) OVER(PARTITION BY sex ORDER BY sex,step_order ) AS float) ) * 100, 2)
+END AS conversion_rate,
+CASE WHEN LAG(COUNT(a.user_id)) OVER(PARTITION BY sex ORDER BY sex,step_order) IS NULL THEN 0
+ELSE LAG(COUNT(a.user_id)) OVER(PARTITION BY sex ORDER BY sex,step_order) - COUNT(a.user_id) 
+END AS drop_off
+FROM union_all a
+LEFT JOIN user_table t
+ON a.user_id = t.user_id
+GROUP BY page,sex, step_order)T;
+
+--=========================================================================
+-- Segmentation by Sex
+--=========================================================================
+-- Results
+--=========================================================================
+--  Step          Male    Conv%  Drop-off  Drop-off%  Female  Conv%  Drop-off  Drop-off%
+-- ----------------------------------------------------------------------------------------
+--  Home          45325    100%      0          0       45075  100%      0          0
+--  Search        22524    49.69%    22801     50.31%   22676  50.31%   22399       49.69%
+--  Payment       2930     13.01%    19594     86.99%   3100   13.67%   19576       86.33%
+--  Confirmation  211      7.2%      2719      92.8%    241    7.77%    2859        92.23%
+---------------------------
+--=========================================================================
+-- key Insights:
+-- 1. Male and female users behave almost identically at every funnel step
+--    with less than 1% difference in conversion rate at each stage
+-- 2. The drop-off pattern is consistent across both segments —
+--    the biggest loss happens at Search → Payment for both
+-- 3. Sex is not a significant factor in conversion performance
+--    the funnel problem is structural, not demographic
+--=========================================================================
+--=========================================================================
+-- Note: New vs Returning User Analysis
+-- A new vs returning user segmentation was attempted but could not
+-- be completed. The dataset contains no user type flag and no duplicate
+-- user IDs across page tables, meaning every user appears only once
+-- with no way to distinguish new from returning visitors.
+--=========================================================================
+
